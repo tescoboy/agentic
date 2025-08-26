@@ -68,6 +68,14 @@
                                 Manage Tenants
                             </a>
                         </li>
+                        {% if active_tenant %}
+                        <li>
+                            <a class="dropdown-item" href="/tenant/{{ active_tenant.id }}/agent">
+                                <i class="fas fa-robot me-2"></i>
+                                AI Settings
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </li>
             </ul>

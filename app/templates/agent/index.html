@@ -124,7 +124,7 @@
                         <input type="text" 
                                class="form-control" 
                                id="endpoint_url" 
-                               value="{{ settings.service_base_url }}/mcp/agents/{{ tenant.slug }}/rank" 
+                               value="{{ config.service_base_url }}/mcp/agents/{{ tenant.slug }}/rank" 
                                readonly>
                         <div class="form-text">
                             <i class="fas fa-info-circle"></i> 
@@ -143,7 +143,7 @@
                     
                     <div class="alert alert-info">
                         <h6><i class="fas fa-code"></i> Request Format:</h6>
-                        <pre class="mb-0"><code>POST {{ settings.service_base_url }}/mcp/agents/{{ tenant.slug }}/rank
+                        <pre class="mb-0"><code>POST {{ config.service_base_url }}/mcp/agents/{{ tenant.slug }}/rank
 Content-Type: application/json
 
 {
