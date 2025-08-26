@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Agent Settings - {{ tenant.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Agent Settings</h1>
+                <a href="/tenant/{{ tenant.id }}/products" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Products
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot"></i> AI Configuration for {{ tenant.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if errors %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Validation Errors:</h6>
+                            <ul class="mb-0">
+                                {% for error in errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    {% if request.query_params.get('message') %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> {{ request.query_params.get('message') }}
+                        </div>
+                    {% endif %}
+                    
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="model_name" class="form-label">AI Model</label>
+                                    <select class="form-select" id="model_name" name="model_name" required>
+                                        <option value="gemini-1.5-pro" {% if agent_settings and agent_settings.model_name == 'gemini-1.5-pro' %}selected{% endif %}>
+                                            Gemini 1.5 Pro
+                                        </option>
+                                        <option value="gemini-1.5-flash" {% if agent_settings and agent_settings.model_name == 'gemini-1.5-flash' %}selected{% endif %}>
+                                            Gemini 1.5 Flash
+                                        </option>
+                                        <option value="claude-3-sonnet" {% if agent_settings and agent_settings.model_name == 'claude-3-sonnet' %}selected{% endif %}>
+                                            Claude 3 Sonnet
+                                        </option>
+                                        <option value="claude-3-haiku" {% if agent_settings and agent_settings.model_name == 'claude-3-haiku' %}selected{% endif %}>
+                                            Claude 3 Haiku
+                                        </option>
+                                    </select>
+                                    <div class="form-text">AI model to use for product ranking</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="timeout_ms" class="form-label">Timeout (milliseconds)</label>
+                                    <input type="number" class="form-control" id="timeout_ms" name="timeout_ms" 
+                                           value="{{ agent_settings.timeout_ms if agent_settings else 30000 }}" 
+                                           min="1000" max="120000" required>
+                                    <div class="form-text">Request timeout in milliseconds (1,000 - 120,000)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="prompt_override" class="form-label">Custom Prompt Override</label>
+                                    <textarea class="form-control" id="prompt_override" name="prompt_override" 
+                                              rows="8" maxlength="10000" 
+                                              placeholder="Leave empty to use the default prompt">{{ form_data.prompt_override if form_data else (agent_settings.prompt_override if agent_settings else '') }}</textarea>
+                                    <div class="form-text">
+                                        Custom prompt to override the default sales agent prompt. 
+                                        Max 10,000 characters. Leave empty to use default.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#effectivePromptModal">
+                                <i class="fas fa-eye"></i> View Effective Prompt
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Effective Prompt Badge -->
+            <div class="mt-3">
+                {% if using_default %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle"></i> Using Default Prompt
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning">
+                        <i class="fas fa-edit"></i> Using Custom Prompt Override
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- MCP Endpoint Panel -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-link"></i> MCP Endpoint URL
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="endpoint_url" class="form-label">Full Endpoint URL</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="endpoint_url" 
+                               value="{{ settings.service_base_url }}/mcp/agents/{{ tenant.slug }}/rank" 
+                               readonly>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> 
+                            This endpoint accepts AdCP ranking requests and returns product recommendations.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="endpoint_path" class="form-label">Path Only (for same-host developers)</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="endpoint_path" 
+                               value="/mcp/agents/{{ tenant.slug }}/rank" 
+                               readonly>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-code"></i> Request Format:</h6>
+                        <pre class="mb-0"><code>POST {{ settings.service_base_url }}/mcp/agents/{{ tenant.slug }}/rank
+Content-Type: application/json
+
+{
+  "brief": "Your advertising campaign brief here"
+}</code></pre>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-check-circle"></i> Response Format:</h6>
+                        <pre class="mb-0"><code>{
+  "items": [
+    {
+      "product_id": "product_123",
+      "reason": "Perfect match for your campaign goals",
+      "score": 0.95
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Effective Prompt Modal -->
+<div class="modal fade" id="effectivePromptModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-robot"></i> Effective Prompt
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    {% if using_default %}
+                        <span class="badge bg-success mb-2">Using Default Prompt</span>
+                    {% else %}
+                        <span class="badge bg-warning mb-2">Using Custom Override</span>
+                    {% endif %}
+                </div>
+                <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap;">{{ effective_prompt }}</pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

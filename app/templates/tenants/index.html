@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Tenants - AdCP Demo Orchestrator{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2">
+                <i class="fas fa-building me-2"></i>
+                Tenants
+            </h1>
+            <p class="text-muted">Manage publisher tenants for the AdCP demo.</p>
+        </div>
+        <div class="col-auto">
+            <a href="/tenants/add" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>
+                Add Tenant
+            </a>
+        </div>
+    </div>
+
+    {% if tenants %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Slug</th>
+                            <th>Created</th>
+                            <th>Updated</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tenant in tenants %}
+                        <tr>
+                            <td>
+                                <strong>{{ tenant.name }}</strong>
+                            </td>
+                            <td>
+                                <code class="text-muted">{{ tenant.slug }}</code>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {{ tenant.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {{ tenant.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="/tenants/{{ tenant.id }}/edit" 
+                                       class="btn btn-outline-primary btn-sm"
+                                       title="Edit tenant">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="/tenants/{{ tenant.id }}/delete" 
+                                       class="btn btn-outline-danger btn-sm"
+                                       title="Delete tenant">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-building fa-3x text-muted mb-3"></i>
+            <h3 class="text-muted">No Tenants</h3>
+            <p class="text-muted mb-4">
+                Create your first tenant to get started with the AdCP demo.
+            </p>
+            <a href="/tenants/add" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>
+                Create First Tenant
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

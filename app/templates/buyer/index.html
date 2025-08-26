@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}Buyer Brief - AdCP Demo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1><i class="fas fa-briefcase"></i> Buyer Brief</h1>
+            <p class="text-muted">Enter your advertising brief and select agents to get product recommendations.</p>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> {{ error }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-edit"></i> Brief & Agent Selection</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" data-log="true">
+                        <!-- Brief Input -->
+                        <div class="mb-4">
+                            <label for="brief" class="form-label">
+                                <i class="fas fa-comment"></i> Advertising Brief <span class="text-danger">*</span>
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="brief" 
+                                name="brief" 
+                                rows="4" 
+                                placeholder="Describe your advertising campaign goals, target audience, budget, and any specific requirements..."
+                                required
+                            >{{ submitted_brief or '' }}</textarea>
+                            <div class="form-text">
+                                Be specific about your target audience, budget, and campaign objectives.
+                            </div>
+                        </div>
+
+                        <!-- Agent Selection -->
+                        <div class="row">
+                            <!-- Internal Tenants -->
+                            {% if tenants %}
+                            <div class="col-md-6 mb-3">
+                                <h6><i class="fas fa-building"></i> Internal Publishers</h6>
+                                <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                    {% for tenant in tenants %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="tenant_{{ tenant.slug }}" 
+                                               name="internal_tenants" 
+                                               value="{{ tenant.slug }}"
+                                               {% if not selected_internal or tenant.slug in selected_internal %}checked{% endif %}>
+                                        <label class="form-check-label" for="tenant_{{ tenant.slug }}">
+                                            <strong>{{ tenant.name }}</strong>
+                                            <br><small class="text-muted">{{ tenant.slug }}</small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- External Agents -->
+                            {% if external_agents %}
+                            <div class="col-md-6 mb-3">
+                                <h6><i class="fas fa-server"></i> External Agents</h6>
+                                <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                    {% for agent in external_agents %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="agent_{{ agent.id }}" 
+                                               name="external_agents" 
+                                               value="{{ agent.base_url }}"
+                                               {% if not selected_external or agent.base_url in selected_external %}checked{% endif %}>
+                                        <label class="form-check-label" for="agent_{{ agent.id }}">
+                                            <strong>{{ agent.name }}</strong>
+                                            <br><small class="text-muted">{{ agent.base_url }}</small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <div class="mb-3">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#advancedOptions">
+                                <i class="fas fa-cog"></i> Advanced Options
+                            </button>
+                            <div class="collapse mt-2" id="advancedOptions">
+                                <div class="card card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="timeout_ms" class="form-label">Timeout (milliseconds)</label>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   id="timeout_ms" 
+                                                   name="timeout_ms" 
+                                                   placeholder="8000"
+                                                   min="1000" 
+                                                   max="60000">
+                                            <div class="form-text">Leave empty to use default (8000ms)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Get Recommendations
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    {% if orchestrator_results %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3><i class="fas fa-chart-bar"></i> Results</h3>
+            <p class="text-muted">
+                <i class="fas fa-info-circle"></i> 
+                Found {{ orchestrator_results.total_agents }} agents. 
+                Context ID: <code>{{ orchestrator_results.context_id }}</code>
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for agent_result in orchestrator_results.results %}
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        {% if agent_result.agent.type == "internal" %}
+                        <i class="fas fa-building"></i> {{ agent_result.agent.slug }}
+                        {% else %}
+                        <i class="fas fa-server"></i> {{ agent_result.agent.url }}
+                        {% endif %}
+                    </h6>
+                    {% if agent_result.error %}
+                    <span class="badge bg-danger">
+                        <i class="fas fa-exclamation-triangle"></i> {{ agent_result.error.type }}
+                    </span>
+                    {% else %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle"></i> 
+                        {% if agent_result['items'] %}
+                            {{ agent_result['items']|length }} products
+                        {% else %}
+                            0 products
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if agent_result.error %}
+                    <!-- Error Display -->
+                    <div class="alert alert-danger mb-0">
+                        <strong>{{ agent_result.error.type|title }}:</strong> {{ agent_result.error.message }}
+                        {% if agent_result.error.status %}
+                        <br><small class="text-muted">Status: {{ agent_result.error.status }}</small>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <!-- Products Display -->
+                    {% if agent_result['items'] %}
+                    <div class="row">
+                        {% for item in agent_result['items'] %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ item.product_id }}</h6>
+                                    <p class="card-text small text-muted">
+                                        <strong>Reason:</strong> {{ item.reason }}
+                                    </p>
+                                    {% if item.score is not none %}
+                                    <p class="card-text small">
+                                        <strong>Score:</strong> 
+                                        <span class="badge bg-primary">{{ "%.2f"|format(item.score) }}</span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-info-circle"></i> No products found for this agent.
+                    </p>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Auto-resize textarea
+document.getElementById('brief').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
+{% endblock %}

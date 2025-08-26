@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3">Bulk Delete Products</h1>
+                    <p class="text-muted">{{ tenant.name }}</p>
+                </div>
+                <a href="/tenant/{{ tenant.id }}/products" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Products
+                </a>
+            </div>
+
+            <!-- Error Messages -->
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <!-- Confirmation Card -->
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Confirm Bulk Delete
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <h6 class="alert-heading">Warning: This action cannot be undone!</h6>
+                        <p class="mb-0">
+                            You are about to delete <strong>{{ product_count }}</strong> product{{ 's' if product_count != 1 else '' }} 
+                            for <strong>{{ tenant.name }}</strong>. This action is permanent and cannot be reversed.
+                        </p>
+                    </div>
+
+                    <p>To confirm this action, please type <code>DELETE</code> in the field below:</p>
+
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="confirmation" class="form-label">Confirmation</label>
+                            <input type="text" class="form-control" id="confirmation" name="confirmation" 
+                                   placeholder="Type DELETE to confirm" required>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/tenant/{{ tenant.id }}/products" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger" disabled id="deleteBtn">
+                                <i class="fas fa-trash"></i> Delete All Products
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6>What will be deleted:</h6>
+                    <ul class="mb-0">
+                        <li>All {{ product_count }} product{{ 's' if product_count != 1 else '' }} for {{ tenant.name }}</li>
+                        <li>Product metadata and configurations</li>
+                        <li>All associated data (this action is permanent)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enable/disable delete button based on confirmation text
+document.getElementById('confirmation').addEventListener('input', function() {
+    const deleteBtn = document.getElementById('deleteBtn');
+    deleteBtn.disabled = this.value !== 'DELETE';
+});
+</script>
+{% endblock %}

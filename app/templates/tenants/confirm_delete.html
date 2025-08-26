@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Tenant - AdCP Demo Orchestrator{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Delete Tenant
+                    </h2>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {{ error }}
+                    </div>
+                    {% endif %}
+
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Warning: This action cannot be undone
+                        </h4>
+                        <p class="mb-0">
+                            You are about to delete the tenant <strong>{{ tenant.name }}</strong> ({{ tenant.slug }}).
+                            This will permanently remove all associated data including products, agent settings, and external agents.
+                        </p>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Tenant Details</h5>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-3">Name:</dt>
+                                <dd class="col-sm-9">{{ tenant.name }}</dd>
+                                
+                                <dt class="col-sm-3">Slug:</dt>
+                                <dd class="col-sm-9"><code>{{ tenant.slug }}</code></dd>
+                                
+                                <dt class="col-sm-3">Created:</dt>
+                                <dd class="col-sm-9">{{ tenant.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                                
+                                <dt class="col-sm-3">Updated:</dt>
+                                <dd class="col-sm-9">{{ tenant.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="confirmation" class="form-label">
+                                Type <code>DELETE</code> to confirm:
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="confirmation" 
+                                   name="confirmation" 
+                                   required 
+                                   placeholder="DELETE">
+                            <div class="form-text">
+                                This helps prevent accidental deletions.
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>
+                                Delete Tenant
+                            </button>
+                            <a href="/tenants" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}External Agents{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-server"></i> External Agents</h1>
+                <a href="/external-agents/add" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add External Agent
+                </a>
+            </div>
+
+            {% if request.query_params.get('message') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> {{ request.query_params.get('message') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            {% if agents %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Configured External Agents</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Base URL</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for agent in agents %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ agent.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <code class="text-break">{{ agent.base_url }}</code>
+                                    </td>
+                                    <td>
+                                        {% if agent.enabled %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Enabled
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-pause-circle"></i> Disabled
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ agent.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="/external-agents/{{ agent.id }}/edit" 
+                                               class="btn btn-outline-primary" 
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger" 
+                                                    title="Delete"
+                                                    onclick="confirmDelete({{ agent.id }}, '{{ agent.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-server fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No External Agents Configured</h3>
+                <p class="text-muted">
+                    External agents allow you to connect to third-party AdCP-compliant services.
+                </p>
+                <a href="/external-agents/add" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Your First External Agent
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the external agent <strong id="agentName"></strong>?</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(agentId, agentName) {
+    document.getElementById('agentName').textContent = agentName;
+    document.getElementById('deleteForm').action = `/external-agents/${agentId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

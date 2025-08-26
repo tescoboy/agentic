@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3">
+                        {% if action == 'add' %}
+                        Add Product
+                        {% else %}
+                        Edit Product
+                        {% endif %}
+                    </h1>
+                    <p class="text-muted">{{ tenant.name }}</p>
+                </div>
+                <a href="/tenant/{{ tenant.id }}/products" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Products
+                </a>
+            </div>
+
+            <!-- Error Messages -->
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <!-- Form -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" data-log="true">
+                        <div class="row">
+                            <!-- Product ID -->
+                            <div class="col-md-6 mb-3">
+                                <label for="product_id" class="form-label">Product ID *</label>
+                                <input type="text" class="form-control" id="product_id" name="product_id" 
+                                       value="{{ product.product_id if product else '' }}" required
+                                       {% if action == 'edit' %}readonly{% endif %}>
+                                <div class="form-text">Unique identifier for this product</div>
+                            </div>
+
+                            <!-- Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ product.name if product else '' }}" required>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description *</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required>{{ product.description if product else '' }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <!-- Delivery Type -->
+                            <div class="col-md-6 mb-3">
+                                <label for="delivery_type" class="form-label">Delivery Type *</label>
+                                <select class="form-select" id="delivery_type" name="delivery_type" required>
+                                    <option value="">Select delivery type</option>
+                                    <option value="guaranteed" {% if product and product.delivery_type == 'guaranteed' %}selected{% endif %}>
+                                        Guaranteed
+                                    </option>
+                                    <option value="non_guaranteed" {% if product and product.delivery_type == 'non_guaranteed' %}selected{% endif %}>
+                                        Non-Guaranteed
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Is Fixed Price -->
+                            <div class="col-md-6 mb-3">
+                                <label for="is_fixed_price" class="form-label">Pricing Model *</label>
+                                <select class="form-select" id="is_fixed_price" name="is_fixed_price" required>
+                                    <option value="">Select pricing model</option>
+                                    <option value="true" {% if product and product.is_fixed_price %}selected{% endif %}>
+                                        Fixed Price
+                                    </option>
+                                    <option value="false" {% if product and not product.is_fixed_price %}selected{% endif %}>
+                                        Auction-Based
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- CPM -->
+                        <div class="mb-3" id="cpm_field" style="display: none;">
+                            <label for="cpm" class="form-label">CPM (Cost Per Mille) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="cpm" name="cpm" 
+                                       value="{{ product.cpm if product else '' }}" step="0.01" min="0">
+                            </div>
+                            <div class="form-text">Required for fixed price products</div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Is Custom -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_custom" name="is_custom" value="true"
+                                           {% if product and product.is_custom %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_custom">
+                                        Custom Product
+                                    </label>
+                                </div>
+                                <div class="form-text">Check if this is a custom product with expiration</div>
+                            </div>
+
+                            <!-- Expires At -->
+                            <div class="col-md-6 mb-3" id="expires_at_field" style="display: none;">
+                                <label for="expires_at" class="form-label">Expires At</label>
+                                <input type="datetime-local" class="form-control" id="expires_at" name="expires_at" 
+                                       value="{{ product.expires_at.strftime('%Y-%m-%dT%H:%M') if product and product.expires_at else '' }}">
+                            </div>
+                        </div>
+
+                        <!-- Policy Compliance -->
+                        <div class="mb-3">
+                            <label for="policy_compliance" class="form-label">Policy Compliance</label>
+                            <textarea class="form-control" id="policy_compliance" name="policy_compliance" rows="2">{{ product.policy_compliance if product else '' }}</textarea>
+                            <div class="form-text">Policy compliance information (e.g., "Family-friendly content")</div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Targeted Ages -->
+                            <div class="col-md-6 mb-3">
+                                <label for="targeted_ages" class="form-label">Target Age Group</label>
+                                <select class="form-select" id="targeted_ages" name="targeted_ages">
+                                    <option value="">Select age group</option>
+                                    <option value="children" {% if product and product.targeted_ages == 'children' %}selected{% endif %}>
+                                        Children
+                                    </option>
+                                    <option value="teens" {% if product and product.targeted_ages == 'teens' %}selected{% endif %}>
+                                        Teens
+                                    </option>
+                                    <option value="adults" {% if product and product.targeted_ages == 'adults' %}selected{% endif %}>
+                                        Adults
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Verified Minimum Age -->
+                            <div class="col-md-6 mb-3">
+                                <label for="verified_minimum_age" class="form-label">Verified Minimum Age</label>
+                                <input type="number" class="form-control" id="verified_minimum_age" name="verified_minimum_age" 
+                                       value="{{ product.verified_minimum_age if product else '' }}" min="0">
+                                <div class="form-text">Minimum age requirement (e.g., 18, 21)</div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/tenant/{{ tenant.id }}/products" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if action == 'add' %}
+                                <i class="fas fa-plus"></i> Create Product
+                                {% else %}
+                                <i class="fas fa-save"></i> Update Product
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide CPM field based on pricing model
+document.getElementById('is_fixed_price').addEventListener('change', function() {
+    const cpmField = document.getElementById('cpm_field');
+    const cpmInput = document.getElementById('cpm');
+    
+    if (this.value === 'true') {
+        cpmField.style.display = 'block';
+        cpmInput.required = true;
+    } else {
+        cpmField.style.display = 'none';
+        cpmInput.required = false;
+    }
+});
+
+// Show/hide expires_at field based on is_custom checkbox
+document.getElementById('is_custom').addEventListener('change', function() {
+    const expiresAtField = document.getElementById('expires_at_field');
+    
+    if (this.checked) {
+        expiresAtField.style.display = 'block';
+    } else {
+        expiresAtField.style.display = 'none';
+    }
+});
+
+// Initialize field visibility on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Trigger change events to set initial state
+    document.getElementById('is_fixed_price').dispatchEvent(new Event('change'));
+    document.getElementById('is_custom').dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}
