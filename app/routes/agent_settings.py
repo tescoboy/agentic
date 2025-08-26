@@ -90,7 +90,7 @@ async def show_agent_settings(
             "agent_settings": agent_settings,
             "effective_prompt": effective_prompt,
             "using_default": using_default,
-            "settings": settings,
+            "config": request.app.state.settings,
         },
     )
 
@@ -164,7 +164,7 @@ async def update_agent_settings(
                     "model_name": model_name,
                     "timeout_ms": timeout_ms,
                 },
-                "settings": settings,
+                "config": request.app.state.settings,
             },
             status_code=400,
         )

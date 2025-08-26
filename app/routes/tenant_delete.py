@@ -28,7 +28,7 @@ async def confirm_delete_tenant(
         raise HTTPException(status_code=404, detail="Tenant not found")
 
     return templates.TemplateResponse(
-        "tenants/confirm_delete.html", {"request": request, "tenant": tenant}
+        "tenants/confirm_delete.html", {"request": request, "tenant": tenant, "config": request.app.state.settings}
     )
 
 
@@ -47,6 +47,7 @@ async def delete_tenant(
                 "request": request,
                 "tenant": repo.get_by_id(tenant_id),
                 "error": "Please type 'DELETE' to confirm deletion.",
+                "config": request.app.state.settings,
             },
             status_code=400,
         )

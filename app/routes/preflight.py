@@ -34,5 +34,6 @@ async def get_preflight_ui(request: Request):
             "overall_status": overall_status,
             "summary": summary,
             "checks": checks,
+            "config": request.app.state.settings,
         },
     )

@@ -34,9 +34,9 @@ async def list_external_agents(
 @router.get("/external-agents/add", response_class=HTMLResponse)
 async def show_add_external_agent_form(request: Request):
     """Show form to add a new external agent."""
-    return request.app.state.templates.TemplateResponse(
+    return templates.TemplateResponse(
         "external_agents/form.html",
-        {"request": request, "agent": None, "is_edit": False},
+        {"request": request, "agent": None, "is_edit": False, "config": request.app.state.settings},
     )
 
 
@@ -51,24 +51,26 @@ async def add_external_agent(
     """Add a new external agent."""
     # Validate inputs
     if not name or not name.strip():
-        return request.app.state.templates.TemplateResponse(
+        return templates.TemplateResponse(
             "external_agents/form.html",
             {
                 "request": request,
                 "agent": None,
                 "is_edit": False,
                 "error": "Name is required",
+                "config": request.app.state.settings,
             },
         )
 
     if not base_url or not base_url.strip():
-        return request.app.state.templates.TemplateResponse(
+        return templates.TemplateResponse(
             "external_agents/form.html",
             {
                 "request": request,
                 "agent": None,
                 "is_edit": False,
                 "error": "Base URL is required",
+                "config": request.app.state.settings,
             },
         )
 
@@ -82,13 +84,14 @@ async def add_external_agent(
             status_code=302,
         )
     except Exception as e:
-        return request.app.state.templates.TemplateResponse(
+        return templates.TemplateResponse(
             "external_agents/form.html",
             {
                 "request": request,
                 "agent": None,
                 "is_edit": False,
                 "error": f"Failed to create agent: {str(e)}",
+                "config": request.app.state.settings,
             },
         )
 
@@ -104,9 +107,9 @@ async def show_edit_external_agent_form(
     if not agent:
         raise HTTPException(status_code=404, detail="External agent not found")
 
-    return request.app.state.templates.TemplateResponse(
+    return templates.TemplateResponse(
         "external_agents/form.html",
-        {"request": request, "agent": agent, "is_edit": True},
+        {"request": request, "agent": agent, "is_edit": True, "config": request.app.state.settings},
     )
 
 
@@ -126,24 +129,26 @@ async def edit_external_agent(
 
     # Validate inputs
     if not name or not name.strip():
-        return request.app.state.templates.TemplateResponse(
+        return templates.TemplateResponse(
             "external_agents/form.html",
             {
                 "request": request,
                 "agent": agent,
                 "is_edit": True,
                 "error": "Name is required",
+                "config": request.app.state.settings,
             },
         )
 
     if not base_url or not base_url.strip():
-        return request.app.state.templates.TemplateResponse(
+        return templates.TemplateResponse(
             "external_agents/form.html",
             {
                 "request": request,
                 "agent": agent,
                 "is_edit": True,
                 "error": "Base URL is required",
+                "config": request.app.state.settings,
             },
         )
 
@@ -159,13 +164,14 @@ async def edit_external_agent(
             status_code=302,
         )
     except Exception as e:
-        return request.app.state.templates.TemplateResponse(
+        return templates.TemplateResponse(
             "external_agents/form.html",
             {
                 "request": request,
                 "agent": agent,
                 "is_edit": True,
                 "error": f"Failed to update agent: {str(e)}",
+                "config": request.app.state.settings,
             },
         )
 
