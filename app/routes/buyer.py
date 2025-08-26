@@ -1,7 +1,7 @@
 """Buyer UI routes for brief input, agent selection, and results display."""
 
 import httpx
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -49,7 +49,7 @@ async def submit_buyer_brief(
     brief: str = Form(...),
     internal_tenants: List[str] = Form(default=[]),
     external_agents: List[str] = Form(default=[]),
-    timeout_ms: int = Form(default=None),
+    timeout_ms: Optional[str] = Form(default=None),
     tenant_repo: TenantRepository = Depends(get_tenant_repo),
     external_agent_repo: ExternalAgentRepository = Depends(get_external_agent_repo),
 ):
@@ -94,8 +94,14 @@ async def submit_buyer_brief(
     }
 
     # Add timeout if provided
-    if timeout_ms is not None and timeout_ms > 0:
-        orchestrator_request["timeout_ms"] = timeout_ms
+    if timeout_ms and timeout_ms.strip():
+        try:
+            timeout_value = int(timeout_ms.strip())
+            if timeout_value > 0:
+                orchestrator_request["timeout_ms"] = timeout_value
+        except ValueError:
+            # Invalid timeout value, ignore it
+            pass
 
     try:
         # Call orchestrator via HTTP
